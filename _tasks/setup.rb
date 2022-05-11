@@ -28,6 +28,7 @@ require "bcrypt"
 require "httpx"
 require "dotenv"
 require "debug"
+require "securerandom"
 
 # Config
 require "./config/bcrypt"
@@ -56,9 +57,6 @@ require "./app/serializers/event_task_completed"
 require "./app/serializers/event_task_created"
 require "./app/serializers/task"
 require "./app/serializers/tasks"
-
-# Utils
-require "./app/utils/rand_id"
 
 # App
 require "./app"

@@ -30,8 +30,8 @@ class App < Roda
         role: attrs[:role],
         email: attrs[:email],
         name: attrs[:name],
-        public_id: Utils::RandID.call,
-        session_token: Utils::RandID.call,
+        public_id: SecureRandom.uuid,
+        session_token: SecureRandom.uuid,
         encrypted_password: BCrypt::Password.create(attrs[:password])
       )
 
@@ -51,7 +51,7 @@ class App < Roda
       account = Account.find(email: attrs[:email])
 
       if account && BCrypt::Password.new(account.encrypted_password) == attrs[:password]
-        account.update(session_token: Utils::RandID.call)
+        account.update(session_token: SecureRandom.uuid)
 
         headers = HEADERS.merge("pid" => account.public_id, "token" => account.session_token)
         request.halt [201, headers, [Serializers::Session.call(account)]]

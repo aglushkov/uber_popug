@@ -36,7 +36,7 @@ class App < Roda
 
       task = DB.transaction do
         Task.create(
-          public_id: Utils::RandID.call,
+          public_id: SecureRandom.uuid,
           title: attrs[:title],
           description: attrs[:description]
         ).tap do |task|

@@ -25,6 +25,7 @@ require "oj"
 require "bcrypt"
 require "dotenv"
 require "debug"
+require "securerandom"
 
 # Config
 require "./config/bcrypt"
@@ -49,9 +50,6 @@ require "./app/serializers/session"
 # Services
 require "./app/services/validation"
 require "./app/services/publish_event"
-
-# Utils
-require "./app/utils/rand_id"
 
 # App
 require "./app"
