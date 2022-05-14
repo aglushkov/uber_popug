@@ -44,11 +44,17 @@ class App < Roda
         end
       end
 
-      task_created_payload = Serializers::EventTaskCreated.call(task)
-      PublishEvent.call("task.created", task_created_payload)
+      PublishEvent.call(
+        event: Events::TaskCreated.new(task),
+        schema: 'tasks.tasks_streaming.task_created',
+        version: 1
+      )
 
-      task_assigned_payload = Serializers::EventTaskAssigned.call(task, account)
-      PublishEvent.call("task.assigned", task_assigned_payload)
+      PublishEvent.call(
+        event: Events::TaskAssigned.new(task, account),
+        schema: 'tasks.tasks_lifecycle.task_assigned',
+        version: 1
+      )
 
       task_payload = Serializers::Task.call(task)
       request.halt [201, HEADERS, [task_payload]]
@@ -78,8 +84,11 @@ class App < Roda
 
           next if account_task.completed?
 
-          task_assigned_payload = Serializers::EventTaskAssigned.call(task, account)
-          PublishEvent.call("task.assigned", task_assigned_payload)
+          PublishEvent.call(
+            event: Events::TaskAssigned.new(task, account),
+            schema: 'tasks.tasks_lifecycle.task_assigned',
+            version: 1
+          )
         end
       end
 
@@ -120,8 +129,11 @@ class App < Roda
         end
 
       if was_completed
-        task_completed_payload = Serializers::EventTaskCompleted.call(task, account)
-        PublishEvent.call("task.completed", task_completed_payload)
+        PublishEvent.call(
+          event: Events::TaskCompleted.new(task, account),
+          schema: 'tasks.tasks_lifecycle.task_completed',
+          version: 1
+        )
       end
 
       payload = {message: "Task was completed"}.to_json

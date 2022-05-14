@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class App < Roda
   class AuthenticationError < StandardError; end
   HEADERS = {"Content-Type" => "application/json"}.freeze
@@ -35,8 +37,11 @@ class App < Roda
         encrypted_password: BCrypt::Password.create(attrs[:password])
       )
 
-      event_payload = Serializers::EventAccountCreated.call(account)
-      PublishEvent.call("account.created", event_payload)
+      PublishEvent.call(
+        event: Events::AccountCreated.new(account),
+        schema: 'accounts.accounts_streaming.account_created',
+        version: 1
+      )
 
       payload = Serializers::Account.call(account)
       headers = HEADERS.merge("pid" => account.public_id, "token" => account.session_token)
