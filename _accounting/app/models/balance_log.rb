@@ -9,4 +9,9 @@ class BalanceLog < Sequel::Model
     task_assigned: "task_assigned",
     task_completed: "task_completed",
     payout: "payout"
+
+  def before_create
+    self.public_id = SecureRandom.uuid
+    super
+  end
 end

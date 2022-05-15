@@ -12,7 +12,7 @@ module Events
     end
 
     def name
-      "task_assigned"
+      "task_completed"
     end
 
     def topic
@@ -24,7 +24,7 @@ module Events
         **event_payload,
         data: {
           task_public_id: task.public_id,
-          assigned_to_account_public_id: account.public_id
+          completed_by_account_public_id: account.public_id
         }
       }
     end

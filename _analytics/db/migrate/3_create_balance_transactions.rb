@@ -5,6 +5,7 @@ Sequel.migration do
       foreign_key :account_id, :accounts, null: false
       foreign_key :task_id, :tasks, null: true
 
+      String :public_id, null: false, unique: true
       Integer :debit, null: false, default: 0
       Integer :credit, null: false, default: 0
 

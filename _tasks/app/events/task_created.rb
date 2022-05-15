@@ -20,7 +20,7 @@ module Events
 
     def payload
       {
-        **event_payload,
+        **event_payload(version: 2),
         data: {
           public_id: task.public_id,
           title: task.title,

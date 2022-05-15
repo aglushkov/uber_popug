@@ -4,6 +4,9 @@ class PublishEvent
   class Error < StandardError
   end
 
+  class InvalidPayload < Error
+  end
+
   class << self
     def call(event:, schema:, version:)
       payload = event.payload
@@ -19,6 +22,13 @@ class PublishEvent
     private
 
     def publish(topic_name:, event_name:, payload:)
+      puts <<~MESSAGE
+        Publish Event:
+          topic_name: #{topic_name}
+          event_name: #{event_name}
+          payload: #{payload}
+      MESSAGE
+
       json_payload = Oj.dump(payload, mode: :compat)
       topics(topic_name).publish(json_payload, routing_key: event_name)
     rescue Bunny::Exception => error

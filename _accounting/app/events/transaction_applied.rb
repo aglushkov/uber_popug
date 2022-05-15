@@ -22,6 +22,7 @@ module Events
       {
         **event_payload,
         data: {
+          public_id: balance_log.public_id,
           account_public_id: balance_log.account.public_id,
           task_public_id: balance_log.task&.public_id,
           type: balance_log.operation_name,

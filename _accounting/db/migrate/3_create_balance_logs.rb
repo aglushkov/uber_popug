@@ -16,6 +16,8 @@ Sequel.migration do
       foreign_key :task_id, :tasks, null: true
       foreign_key :daily_payout_id, :daily_payouts, null: true
 
+      String :public_id, null: false, unique: true
+
       # adds this amount to balance
       Integer :debit_amount, null: false, default: 0
 

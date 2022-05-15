@@ -8,6 +8,7 @@
     "event_data": {
       "type": "object",
       "properties": {
+        "public_id": { "type": "string" },
         "account_public_id": { "type": "string" },
         "task_public_id": { "type": ["string", "null"] },
         "type": { "type": "string" },
@@ -15,6 +16,7 @@
         "credit": { "type": "integer" }
       },
       "required": [
+        "public_id",
         "account_public_id",
         "task_public_id",
         "type",

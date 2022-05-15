@@ -73,7 +73,7 @@ class AccountsApp < Roda
       account = Account.find(public_id: attrs[:public_id])
 
       if !account || (account.session_token != attrs[:session_token])
-        raise App::AuthenticationError, "Invalid credentials"
+        raise AccountsApp::AuthenticationError, "Invalid credentials"
       end
 
       payload = Serializers::Account.call(account)

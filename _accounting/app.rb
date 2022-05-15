@@ -8,8 +8,6 @@ class AccountingApp < Roda
   plugin :json_parser, parser: proc { |str| Oj.load(str) }
   plugin :error_handler do |error|
     case error
-    when Validation::Error
-      request.halt [422, HEADERS, [{message: error.message}.to_json]]
     when Authenticate::Error
       request.halt [401, HEADERS, [{message: error.message}.to_json]]
     when AccountingApp::AuthorizationError
@@ -29,7 +27,7 @@ class AccountingApp < Roda
     #
     request.get "balance" do
       current_account = Authenticate.call(request)
-      raise App::AuthorizationError, "Only workers can view their balance" unless current_account.worker?
+      raise AccountingApp::AuthorizationError, "Only workers can view their balance" unless current_account.worker?
 
       balance_payload = Serializers::Account.call(current_account)
       request.halt [200, HEADERS, [balance_payload]]
@@ -42,8 +40,9 @@ class AccountingApp < Roda
     #
     request.get "daily_payout" do
       current_account = Authenticate.call(request)
-      raise App::AuthorizationError, "Only workers can view their balance" unless current_account.worker?
+      raise AccountingApp::AuthorizationError, "Only workers can view their balance" unless current_account.worker?
 
+      date_param = request.GET['date']
       date = date_param ? Date.iso8601(date_param) : Time.now.utc.to_date.iso8601
       payout = DailyPayout.find(account_id: current_account.id, date: date)
 
@@ -62,15 +61,31 @@ class AccountingApp < Roda
     #
     # curl -i -H "pid: 8335" -H "token: 8330" http://127.0.0.1:9294/totals
     #
-    request.get "totals" do
+    request.get "dashboard" do
       current_account = Authenticate.call(request)
-      raise App::AuthorizationError, "Only admins and accountants can view totals" if current_account.worker?
+      raise AccountingApp::AuthorizationError, "Only admins and accountants can view dashboard" if current_account.worker?
 
-      # WIP
-      # date = date_param ? Date.iso8601(date_param) : Time.now.utc.to_date.iso8601
+      from = request.GET["from"]
+      to = request.GET["to"]
+      from = from ? Date.iso8601(from) : Time.now.utc.to_date
+      to = to ? Date.iso8601(to) : Time.now.utc.to_date
 
-      payload = "{}"
-      request.halt [200, HEADERS, [payload]]
+      totals =
+        (from..to).each_with_object({}) do |date, obj|
+          date_str = date.iso8601
+          from_time = Time.utc(*date_str.split("-"))
+          to_time = from_time + 60 * 60 * 24
+
+          income =
+            BalanceLog
+              .where(operation_name: %w[task_assigned task_completed])
+              .where(created_at: (from_time...to_time))
+              .get(Sequel.lit("SUM(credit_amount) - SUM(debit_amount)"))
+
+          obj[date.iso8601] = income
+        end
+
+      request.halt [200, HEADERS, [totals.to_json]]
     end
 
     #
@@ -79,50 +94,7 @@ class AccountingApp < Roda
     # curl -i -X POST http://127.0.0.1:9294/daily_payouts
     #
     request.post "daily_payouts" do
-      date = Time.now.utc.to_date
-
-      transactions =
-        BalanceLog
-          .where(operation_name: ["task_assigned", "task_completed"])
-          .where(daily_payout_id: nil)
-          .select_map([:account_id, :id, :debit_amount, :credit_amount])
-          .group_by(&:first)
-
-      transactions.each do |account_id, transactions|
-        transaction_ids = transactions.map { |transaction| transaction[1] }
-        debit = transactions.sum { |transaction| transaction[2] }
-        credit = transactions.sum { |transaction| transaction[3] }
-        total = debit - credit
-
-        if total > 0
-          balance_transaction =
-            DB.transaction do
-              account = Account.for_update[id: account_id]
-              next if DailyPayout[account_id: account.id, date: date]
-
-              daily_payout = DailyPayout.create(account_id: account.id, amount: total, date: date)
-
-              # Set daily_payout_id so transactions will not be used in other payouts
-              BalanceLog.where(id: transaction_ids).update(daily_payout_id: daily_payout.id)
-
-              # Add payout transaction
-              BalanceLog.create(account_id: account.id, credit_amount: total, operation_name: "payout").tap do |rec|
-                account.update(balance: account.balance - rec.credit_amount)
-              end
-            end
-
-          if balance_transaction
-            PublishEvent.call(
-              event: Events::TransactionApplied.new(balance_transaction),
-              schema: "accounting.balance_transactions.transaction_applied",
-              version: 1
-            )
-
-            # @TODO send email
-            # AsyncEmailJob.(account, balance_transaction)
-          end
-        end
-      end
+      DailyPayouts::Generate.new.call # actions/daily_payots/generate.rb
 
       request.halt [200, HEADERS, []]
     end

@@ -32,38 +32,8 @@ class TasksApp < Roda
       Authenticate.call(request)
 
       attrs = Validation.call(request.POST, CreateTaskForm)
-      account = Account.rand_workers.first
 
-      title = attrs[:title]
-      jira_id = title[/\[.*?\]/]
-
-      if jira_id
-        title = title.sub(jira_id, "").gsub(/^[\s-]+|[\s-]+$/, "")
-        jira_id = jira_id.gsub(/^[\[\s-]+|[\]\s-]+$/, "")
-      end
-
-      task = DB.transaction do
-        Task.create(
-          public_id: SecureRandom.uuid,
-          title: title,
-          jira_id: jira_id,
-          description: attrs[:description]
-        ).tap do |task|
-          AccountsTask.create(task_id: task.id, account_id: account.id, is_completed: false)
-        end
-      end
-
-      PublishEvent.call(
-        event: Events::TaskCreated.new(task),
-        schema: "tasks.tasks_streaming.task_created",
-        version: 1
-      )
-
-      PublishEvent.call(
-        event: Events::TaskAssigned.new(task, account),
-        schema: "tasks.tasks_lifecycle.task_assigned",
-        version: 1
-      )
+      task = Tasks::Create.new.call(attrs) # actions/tasks/create.rb
 
       task_payload = Serializers::Task.call(task)
       request.halt [201, HEADERS, [task_payload]]
@@ -80,26 +50,7 @@ class TasksApp < Roda
       current_account = Authenticate.call(request)
       raise App::AuthorizationError, "Only admins can shuffle tasks" unless current_account.admin?
 
-      Task.uncompleted.order(Sequel.lit("tasks.id")).each_page(100) do |tasks|
-        tasks.each do |task|
-          account = Account.rand_worker
-          account_task =
-            DB.transaction do
-              task.lock!
-              account_task = task.accounts_task
-              account_task.update(account_id: account.id) unless account_task.completed?
-              account_task
-            end
-
-          next if account_task.completed?
-
-          PublishEvent.call(
-            event: Events::TaskAssigned.new(task, account),
-            schema: "tasks.tasks_lifecycle.task_assigned",
-            version: 1
-          )
-        end
-      end
+      Tasks::Shuffle.new.call # actions/tasks/shuffle.rb
 
       payload = {message: "Tasks were shuffled"}.to_json
       request.halt [201, HEADERS, [payload]]
@@ -130,20 +81,23 @@ class TasksApp < Roda
       account = Authenticate.call(request)
       task = Task.with_pk!(attrs[:task_id])
 
-      was_completed =
-        DB.transaction do
-          task.lock!
-          account_task = AccountsTask.find!(account_id: account.id, task_id: task.id)
-          account_task.update(is_completed: true) if account_task.uncompleted?
-        end
+      Tasks::Complete.new.call(task, by_account: account) # actions/tasks/complete.rb
 
-      if was_completed
-        PublishEvent.call(
-          event: Events::TaskCompleted.new(task, account),
-          schema: "tasks.tasks_lifecycle.task_completed",
-          version: 1
-        )
-      end
+      payload = {message: "Task was completed"}.to_json
+      request.halt [201, HEADERS, [payload]]
+    end
+
+    #
+    # Complete Random Task (for testing purposes)
+    # Returns nothing
+    # Sends 'task.completed' event
+    #
+    # curl -i -X POST http://127.0.0.1:9293/tasks/complete_random -H 'Content-Type: application/json'
+    #
+    request.post "tasks/complete_random" do
+      task = Task.uncompleted.order(Sequel.lit("RANDOM()")).first || raise(Sequel::NoMatchingRow)
+
+      Tasks::Complete.new.call(task) # actions/tasks/complete.rb
 
       payload = {message: "Task was completed"}.to_json
       request.halt [201, HEADERS, [payload]]
