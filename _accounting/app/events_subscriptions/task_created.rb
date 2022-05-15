@@ -11,7 +11,8 @@ module EventSubscriptions
         with(topic_name: topic_name, event_name: event_name, schema: schema, version: version) do |data|
           Task.create_or_find(public_id: data.fetch(:public_id)) do |task|
             task.title = data.fetch(:title)
-            task.role = data.fetch(:role)
+            task.description = data.fetch(:description)
+            task.jira_id = data.fetch(:jira_id)
           end
         end
       end
@@ -23,5 +24,5 @@ EventSubscriptions::TaskCreated.subscribe(
   topic_name: "tasks_streaming",
   event_name: "task_created",
   schema: "tasks.tasks_streaming.task_created",
-  version: 1
+  version: 2
 )
