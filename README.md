@@ -16,12 +16,27 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 ```
 
 2. Run services
+
+Create databases
+```
+  DROP database popug_accounts; CREATE database popug_accounts;
+  DROP database popug_tasks; CREATE database popug_tasks;
+  DROP database popug_analytics; CREATE database popug_analytics;
+  DROP database popug_accounting; CREATE database popug_accounting;
+```
+
 ```
   cd _authn
   rackup -p 9292
 
   cd _tasks
   rackup -p 9293
+
+  cd _accounting
+  rackup -p 9294
+
+  cd _analytics
+  rackup -p 9295
 ```
 
 3. Create some accounts

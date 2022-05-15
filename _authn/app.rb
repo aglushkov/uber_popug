@@ -10,7 +10,7 @@ class AccountsApp < Roda
     case error
     when Validation::Error
       request.halt [422, HEADERS, [{message: error.message}.to_json]]
-    when App::AuthenticationError
+    when AccountsApp::AuthenticationError
       request.halt [401, HEADERS, [{message: error.message}.to_json]]
     else
       raise error

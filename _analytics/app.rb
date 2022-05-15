@@ -1,4 +1,4 @@
-class App < Roda
+class AnalyticsApp < Roda
   class AuthorizationError < StandardError; end
 
   HEADERS = {"Content-Type" => "application/json"}.freeze
@@ -10,7 +10,7 @@ class App < Roda
     case error
     when Authenticate::Error
       request.halt [401, HEADERS, [{message: error.message}.to_json]]
-    when App::AuthorizationError
+    when AnalyticsApp::AuthorizationError
       request.halt [403, HEADERS, [{message: error.message}.to_json]]
     when Sequel::NoMatchingRow
       request.halt [404, HEADERS, [{message: error.message}.to_json]]

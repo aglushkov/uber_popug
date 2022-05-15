@@ -12,7 +12,7 @@ class TasksApp < Roda
       request.halt [422, HEADERS, [{message: error.message}.to_json]]
     when Authenticate::Error
       request.halt [401, HEADERS, [{message: error.message}.to_json]]
-    when App::AuthorizationError
+    when TasksApp::AuthorizationError
       request.halt [403, HEADERS, [{message: error.message}.to_json]]
     when Sequel::NoMatchingRow
       request.halt [404, HEADERS, [{message: error.message}.to_json]]
@@ -38,8 +38,8 @@ class TasksApp < Roda
       jira_id = title[/\[.*?\]/]
 
       if jira_id
-        title = title.sub(jira_id, '').gsub(/^[\s-]+|[\s-]+$/, '')
-        jira_id = jira_id.gsub(/^[\[\s-]+|[\]\s-]+$/, '')
+        title = title.sub(jira_id, "").gsub(/^[\s-]+|[\s-]+$/, "")
+        jira_id = jira_id.gsub(/^[\[\s-]+|[\]\s-]+$/, "")
       end
 
       task = DB.transaction do
