@@ -34,10 +34,19 @@ class TasksApp < Roda
       attrs = Validation.call(request.POST, CreateTaskForm)
       account = Account.rand_workers.first
 
+      title = attrs[:title]
+      jira_id = title[/\[.*?\]/]
+
+      if jira_id
+        title = title.sub(jira_id, '').gsub(/^[\s-]+|[\s-]+$/, '')
+        jira_id = jira_id.gsub(/^[\[\s-]+|[\]\s-]+$/, '')
+      end
+
       task = DB.transaction do
         Task.create(
           public_id: SecureRandom.uuid,
-          title: attrs[:title],
+          title: title,
+          jira_id: jira_id,
           description: attrs[:description]
         ).tap do |task|
           AccountsTask.create(task_id: task.id, account_id: account.id, is_completed: false)
