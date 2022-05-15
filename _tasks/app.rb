@@ -1,4 +1,4 @@
-class App < Roda
+class TasksApp < Roda
   class AuthorizationError < StandardError; end
 
   HEADERS = {"Content-Type" => "application/json"}.freeze
@@ -46,13 +46,13 @@ class App < Roda
 
       PublishEvent.call(
         event: Events::TaskCreated.new(task),
-        schema: 'tasks.tasks_streaming.task_created',
+        schema: "tasks.tasks_streaming.task_created",
         version: 1
       )
 
       PublishEvent.call(
         event: Events::TaskAssigned.new(task, account),
-        schema: 'tasks.tasks_lifecycle.task_assigned',
+        schema: "tasks.tasks_lifecycle.task_assigned",
         version: 1
       )
 
@@ -86,7 +86,7 @@ class App < Roda
 
           PublishEvent.call(
             event: Events::TaskAssigned.new(task, account),
-            schema: 'tasks.tasks_lifecycle.task_assigned',
+            schema: "tasks.tasks_lifecycle.task_assigned",
             version: 1
           )
         end
@@ -131,7 +131,7 @@ class App < Roda
       if was_completed
         PublishEvent.call(
           event: Events::TaskCompleted.new(task, account),
-          schema: 'tasks.tasks_lifecycle.task_completed',
+          schema: "tasks.tasks_lifecycle.task_completed",
           version: 1
         )
       end

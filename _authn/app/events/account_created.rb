@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative './event_payload_helper'
+require_relative "./event_payload_helper"
 
 module Events
   class AccountCreated
@@ -13,11 +13,11 @@ module Events
     end
 
     def name
-      'account_created'
+      "account_created"
     end
 
     def topic
-      'accounts_streaming'
+      "accounts_streaming"
     end
 
     def payload

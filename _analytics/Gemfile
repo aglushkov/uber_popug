@@ -1,0 +1,17 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+ruby "3.1.0"
+
+gem "roda"
+gem "puma"
+gem "pg"
+gem "bunny"
+gem "dry-schema"
+gem "sequel"
+gem "oj"
+gem "bcrypt"
+gem "httpx"
+gem "dotenv"
+gem "debug"
+gem "schema_registry", path: "#{__dir__}/../event_schema_registry/ruby"

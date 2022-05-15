@@ -11,11 +11,11 @@ module Events
     end
 
     def name
-      'task_created'
+      "task_created"
     end
 
     def topic
-      'tasks_streaming'
+      "tasks_streaming"
     end
 
     def payload

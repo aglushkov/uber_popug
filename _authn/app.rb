@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class App < Roda
+class AccountsApp < Roda
   class AuthenticationError < StandardError; end
   HEADERS = {"Content-Type" => "application/json"}.freeze
 
@@ -39,7 +39,7 @@ class App < Roda
 
       PublishEvent.call(
         event: Events::AccountCreated.new(account),
-        schema: 'accounts.accounts_streaming.account_created',
+        schema: "accounts.accounts_streaming.account_created",
         version: 1
       )
 

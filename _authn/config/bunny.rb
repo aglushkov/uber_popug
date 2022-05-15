@@ -1,4 +1,3 @@
-
 class BunnyChannel
   def self.connection
     @connection ||= begin

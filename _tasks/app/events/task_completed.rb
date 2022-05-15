@@ -12,11 +12,11 @@ module Events
     end
 
     def name
-      'task_assigned'
+      "task_assigned"
     end
 
     def topic
-      'tasks_lifecycle'
+      "tasks_lifecycle"
     end
 
     def payload
