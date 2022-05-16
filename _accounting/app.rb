@@ -42,7 +42,7 @@ class AccountingApp < Roda
       current_account = Authenticate.call(request)
       raise AccountingApp::AuthorizationError, "Only workers can view their balance" unless current_account.worker?
 
-      date_param = request.GET['date']
+      date_param = request.GET["date"]
       date = date_param ? Date.iso8601(date_param) : Time.now.utc.to_date.iso8601
       payout = DailyPayout.find(account_id: current_account.id, date: date)
 

@@ -89,7 +89,7 @@ class AnalyticsApp < Roda
               .group(:account_id)
 
           obj[date.iso8601] = {
-            income: amount,
+            income: income,
             accounts_with_negative_balance: accounts_with_negative_balance
           }
         end
