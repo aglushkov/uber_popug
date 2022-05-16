@@ -1,4 +1,6 @@
-class App < Roda
+# frozen_string_literal: true
+
+class AccountsApp < Roda
   class AuthenticationError < StandardError; end
   HEADERS = {"Content-Type" => "application/json"}.freeze
 
@@ -8,7 +10,7 @@ class App < Roda
     case error
     when Validation::Error
       request.halt [422, HEADERS, [{message: error.message}.to_json]]
-    when App::AuthenticationError
+    when AccountsApp::AuthenticationError
       request.halt [401, HEADERS, [{message: error.message}.to_json]]
     else
       raise error
@@ -35,8 +37,11 @@ class App < Roda
         encrypted_password: BCrypt::Password.create(attrs[:password])
       )
 
-      event_payload = Serializers::EventAccountCreated.call(account)
-      PublishEvent.call("account.created", event_payload)
+      PublishEvent.call(
+        event: Events::AccountCreated.new(account),
+        schema: "accounts.accounts_streaming.account_created",
+        version: 1
+      )
 
       payload = Serializers::Account.call(account)
       headers = HEADERS.merge("pid" => account.public_id, "token" => account.session_token)
@@ -68,7 +73,7 @@ class App < Roda
       account = Account.find(public_id: attrs[:public_id])
 
       if !account || (account.session_token != attrs[:session_token])
-        raise App::AuthenticationError, "Invalid credentials"
+        raise AccountsApp::AuthenticationError, "Invalid credentials"
       end
 
       payload = Serializers::Account.call(account)

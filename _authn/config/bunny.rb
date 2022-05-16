@@ -1,2 +1,9 @@
-BUNNY_CONNECTION = Bunny.new
-BUNNY_CONNECTION.start
+class BunnyChannel
+  def self.connection
+    @connection ||= begin
+      bunny = Bunny.new
+      bunny.start
+      bunny.create_channel
+    end
+  end
+end

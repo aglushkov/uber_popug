@@ -12,4 +12,4 @@ Dir["./app/**/*.rb"].each { |file| require file }
 # Roda App
 require "./app"
 
-App.freeze
+TasksApp.freeze

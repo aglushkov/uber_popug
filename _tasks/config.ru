@@ -1,3 +1,3 @@
 require "./setup"
 
-run App.freeze.app
+run TasksApp.freeze.app

@@ -1,12 +1,10 @@
 module Serializers
-  class EventAccountCreated
+  class Account
     def self.call(account)
       Oj.dump(
         {
           account: {
-            public_id: account.public_id,
-            name: account.name,
-            role: account.role
+            balance: account.balance
           }
         },
         mode: :compat

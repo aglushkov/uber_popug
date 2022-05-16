@@ -9,10 +9,19 @@ class Account < Sequel::Model
     join_table: :accounts_tasks,
     conditions: {is_completed: false}
 
-  enum :role, worker: "worker", admin: "admin"
+  enum :role, worker: "worker", admin: "admin", accountant: "accountant"
 
   def self.rand_worker
     rand_workers.first
+  end
+
+  def self.create_or_find(public_id:, &block)
+    account = find(public_id: public_id)
+    return account if account
+
+    DB.transaction(savepoint: true) { create(public_id: public_id, &block) }
+  rescue Sequel::UniqueConstraintViolation
+    find(public_id: public_id) || raise(Sequel::NoMatchingRow)
   end
 
   dataset_module do

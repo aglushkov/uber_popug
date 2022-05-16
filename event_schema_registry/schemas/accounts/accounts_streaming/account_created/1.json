@@ -8,15 +8,9 @@
     "event_data": {
       "type": "object",
       "properties": {
-        "public_id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "role": {
-          "type": "string"
-        }
+        "public_id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" }
       },
       "required": [
         "public_id",
