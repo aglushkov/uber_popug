@@ -10,7 +10,7 @@ module Events
         event_version: 1,
         event_name: name,
         event_time: Time.now.utc.iso8601(6),
-        producer: "tasks_app"
+        producer: "accounting_app"
       }
     end
   end
